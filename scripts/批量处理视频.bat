@@ -1,14 +1,10 @@
 @echo off
 chcp 65001 >nul
-title 视频批量筛选工具 - 监控模式
+title 视频批量筛选工具
 
 echo ========================================
-echo 视频批量筛选工具 - 监控模式
+echo 视频批量筛选工具 - 批量处理模式
 echo ========================================
-echo.
-echo 此模式将持续监控data文件夹中的新文件
-echo 当检测到新的CSV或Excel文件时，会自动处理
-echo 按 Ctrl+C 可以停止监控
 echo.
 
 REM 检查Python是否安装
@@ -21,7 +17,7 @@ if errorlevel 1 (
 )
 
 REM 检查是否存在主程序
-if not exist "video_filter.py" (
+if not exist "..\video_filter.py" (
     echo ❌ 未找到video_filter.py文件
     echo 请确保此批处理文件与video_filter.py在同一目录下
     pause
@@ -29,16 +25,24 @@ if not exist "video_filter.py" (
 )
 
 REM 检查data文件夹
-if not exist "data" (
+if not exist "..\data" (
     echo 📁 创建data文件夹...
-    mkdir data
+    mkdir ..\data
     echo ✅ data文件夹已创建
+    echo.
+    echo 请将待处理的CSV或Excel文件放入data文件夹，然后重新运行此脚本
+    pause
+    exit /b 0
 )
 
-echo 🔍 启动监控模式...
+REM 切换到项目根目录
+cd ..
+
+REM 运行批处理脚本
+echo 🚀 启动批量处理...
 echo.
-python video_filter.py --watch
+python batch_process.py
 
 echo.
-echo 监控已停止
+echo 处理完成！
 pause

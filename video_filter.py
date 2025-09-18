@@ -50,7 +50,16 @@ try:
     from yt_dlp import YoutubeDL
 except ImportError:
     YoutubeDL = None
-    print("警告: yt-dlp 未安装，在线视频处理功能将不可用")
+    print("警告: yt-dlp 未安装，将使用轻量级替代方案")
+
+# 导入轻量级视频信息提取器
+try:
+    from utils.video_info_extractor import LightVideoExtractor
+    light_extractor = LightVideoExtractor()
+    print("✓ 轻量级视频信息提取器已加载")
+except ImportError:
+    light_extractor = None
+    print("警告: 轻量级视频信息提取器加载失败")
 
 try:
     from PIL import Image
@@ -534,7 +543,7 @@ class ContentDetector:
 
 
 def extract_video_info(url: str, cookies_path: str = None, max_retries: int = 3, retry_delay: float = 1.0):
-    """用yt-dlp提取视频元信息，不下载视频
+    """提取视频元信息，优先使用yt-dlp，不可用时使用轻量级提取器
     
     Args:
         url: 视频链接
@@ -544,16 +553,65 @@ def extract_video_info(url: str, cookies_path: str = None, max_retries: int = 3,
     
     返回: {title, duration, max_resolution, width, height, thumbnails(list), error}
     """
+    # 如果yt-dlp不可用，使用轻量级提取器
     if YoutubeDL is None:
-        return {
-            'title': None,
-            'duration': None,
-            'max_resolution': None,
-            'width': 0,
-            'height': 0,
-            'thumb_urls': [],
-            'error': 'yt-dlp 未安装，无法提取视频信息'
-        }
+        if light_extractor is not None:
+            try:
+                info = light_extractor.extract_video_info(url)
+                # 转换格式以匹配原有接口
+                duration_str = info.get('duration', '')
+                duration_seconds = None
+                if duration_str and ':' in duration_str:
+                    try:
+                        parts = duration_str.split(':')
+                        if len(parts) == 2:
+                            duration_seconds = int(parts[0]) * 60 + int(parts[1])
+                    except:
+                        pass
+                
+                # 解析分辨率
+                resolution = info.get('resolution', '')
+                width, height = 0, 0
+                if resolution and 'x' in resolution:
+                    try:
+                        w, h = resolution.split('x')
+                        width, height = int(w), int(h)
+                    except:
+                        pass
+                elif '1080' in resolution:
+                    width, height = 1920, 1080
+                elif '720' in resolution:
+                    width, height = 1280, 720
+                
+                return {
+                    'title': info.get('title'),
+                    'duration': duration_seconds,
+                    'max_resolution': f"{width}x{height}" if width and height else resolution,
+                    'width': width,
+                    'height': height,
+                    'thumb_urls': [],  # 轻量级提取器暂不支持缩略图
+                    'error': info.get('error') or None
+                }
+            except Exception as e:
+                return {
+                    'title': None,
+                    'duration': None,
+                    'max_resolution': None,
+                    'width': 0,
+                    'height': 0,
+                    'thumb_urls': [],
+                    'error': f'轻量级提取器失败: {str(e)}'
+                }
+        else:
+            return {
+                'title': None,
+                'duration': None,
+                'max_resolution': None,
+                'width': 0,
+                'height': 0,
+                'thumb_urls': [],
+                'error': 'yt-dlp 和轻量级提取器都不可用'
+            }
     
     ydl_opts = {
         'quiet': True,
@@ -637,10 +695,10 @@ def process_csv_links(csv_path: str, link_column: str, config_path: str = None):
             raise ValueError(f"CSV中未找到链接列: {link_column}")
         rows = list(reader)
 
-    # 预备输出列
+    # 预备输出列 - 根据用户需求重新设计
     out_cols = [
-        'title', 'duration', 'max_available_resolution', 'resolution_ok',
-        'has_violence_blood', 'has_smoking', 'overall_pass', 'notes', 'error_message'
+        '清晰度是否1080', '是否有吸烟', '是否有血腥暴力', '是否通过全部筛选', 
+        '视频标题', '视频时长', '最大分辨率', '备注', '错误信息'
     ]
     fieldnames_extended = fieldnames + [c for c in out_cols if c not in fieldnames]
 
@@ -653,42 +711,42 @@ def process_csv_links(csv_path: str, link_column: str, config_path: str = None):
         for c in out_cols:
             row.setdefault(c, None)
         if not url.startswith(('http://', 'https://')):
-            row['error_message'] = '无效链接'
-            row['overall_pass'] = False
+            row['错误信息'] = '无效链接'
+            row['是否通过全部筛选'] = False
             continue
         info = extract_video_info(url, cookies_path)
-        row['title'] = info.get('title')
-        row['duration'] = info.get('duration')
-        row['max_available_resolution'] = info.get('max_resolution')
+        row['视频标题'] = info.get('title')
+        row['视频时长'] = info.get('duration')
+        row['最大分辨率'] = info.get('max_resolution')
         if info.get('error'):
-            row['error_message'] = format_error_message(info['error'])
-            row['overall_pass'] = False
+            row['错误信息'] = format_error_message(info['error'])
+            row['是否通过全部筛选'] = False
             continue
-        # 分辨率判定
+        # 分辨率判定 - 检查是否为1080p
         try:
             width = int(info.get('width') or 0) if info.get('width') not in [None, ''] else 0
             height = int(info.get('height') or 0) if info.get('height') not in [None, ''] else 0
             res_ok = (width >= min_width and height >= min_height)
         except (ValueError, TypeError):
             res_ok = False
-        row['resolution_ok'] = bool(res_ok)
+        row['清晰度是否1080'] = bool(res_ok)
         if not res_ok:
-            row['overall_pass'] = False
-            row['notes'] = append_note(row.get('notes'), '分辨率不达标')
+            row['是否通过全部筛选'] = False
+            row['备注'] = append_note(row.get('备注'), '分辨率不达标')
             continue
         # 内容识别（可降级）
         if not detector.enabled:
-            row['has_violence_blood'] = False
-            row['has_smoking'] = False
-            row['overall_pass'] = bool(res_ok)
-            row['notes'] = append_note(row.get('notes'), '内容检测未启用')
+            row['是否有血腥暴力'] = False
+            row['是否有吸烟'] = False
+            row['是否通过全部筛选'] = bool(res_ok)
+            row['备注'] = append_note(row.get('备注'), '内容检测未启用')
         else:
             detect_res = detector.detect_from_thumbnails(info.get('thumb_urls') or [])
             has_violence_blood = bool(detect_res.get('violence', False) or detect_res.get('blood', False) or detect_res.get('gore', False))
             has_smoking = bool(detect_res.get('smoking', False))
-            row['has_violence_blood'] = has_violence_blood
-            row['has_smoking'] = has_smoking
-            row['overall_pass'] = bool(res_ok and (not has_violence_blood) and (not has_smoking))
+            row['是否有血腥暴力'] = has_violence_blood
+            row['是否有吸烟'] = has_smoking
+            row['是否通过全部筛选'] = bool(res_ok and (not has_violence_blood) and (not has_smoking))
 
     # 写回CSV（覆盖）- 使用临时文件避免权限问题
     import shutil
@@ -707,72 +765,8 @@ def process_csv_links(csv_path: str, link_column: str, config_path: str = None):
             os.remove(temp_path)
         raise
 
-# 修改：Excel 处理函数支持自动识别 CSV 并降级
 
-def process_csv_links(csv_path: str, link_column: str = 'link', config_path: str = None):
-    """
-    处理CSV文件中的视频链接
-    
-    Args:
-        csv_path: CSV文件路径
-        link_column: 链接列名，默认'link'
-        config_path: 配置文件路径
-    """
-    logger.info(f"开始处理CSV文件: {csv_path}")
-    
-    # 读取CSV文件，所有列都作为字符串读取以避免类型推断问题
-    try:
-        df = pd.read_csv(csv_path, encoding='utf-8', dtype=str)
-    except UnicodeDecodeError:
-        try:
-            df = pd.read_csv(csv_path, encoding='gbk', dtype=str)
-        except UnicodeDecodeError:
-            df = pd.read_csv(csv_path, encoding='latin-1', dtype=str)
-    
-    if link_column not in df.columns:
-        logger.error(f"CSV文件中未找到列 '{link_column}'")
-        logger.info(f"可用列: {list(df.columns)}")
-        return
-    
-    # 初始化筛选器
-    filter_instance = VideoFilter(config_path)
-    
-    # 添加结果列（如果不存在）
-    result_columns = ['status', 'reason', 'duration', 'title', 'description']
-    for col in result_columns:
-        if col not in df.columns:
-            df[col] = ''
-    
-    # 处理每个链接
-    total_links = len(df)
-    for index, row in df.iterrows():
-        link = row[link_column]
-        if pd.isna(link) or not link.strip():
-            continue
-            
-        logger.info(f"处理链接 {index + 1}/{total_links}: {link}")
-        
-        try:
-            result = filter_instance.check_video(link)
-            
-            # 更新结果到DataFrame
-            df.at[index, 'status'] = result['status']
-            df.at[index, 'reason'] = result['reason']
-            df.at[index, 'duration'] = result.get('duration', '')
-            df.at[index, 'title'] = result.get('title', '')
-            df.at[index, 'description'] = result.get('description', '')
-            
-        except Exception as e:
-            logger.error(f"处理链接失败: {link}, 错误: {str(e)}")
-            df.at[index, 'status'] = 'error'
-            df.at[index, 'reason'] = f"处理失败: {str(e)}"
-    
-    # 写回CSV文件
-    df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    logger.info(f"处理完成，结果已写回：{csv_path}")
-
-
-def process_excel_links(excel_path: str, link_column: str = 'link', config_path: str = None):
+def process_excel_links(excel_path: str, link_column: str = 'vediolink', config_path: str = None):
     """读取Excel/CSV链接，按规则筛选并写回原文件"""
     # CSV 分支：不依赖 pandas
     lower = str(excel_path).lower()
@@ -819,33 +813,33 @@ def process_excel_links(excel_path: str, link_column: str = 'link', config_path:
             df.at[idx, 'overall_pass'] = False
             continue
         info = extract_video_info(url, cookies_path)
-        df.at[idx, 'title'] = info['title']
-        df.at[idx, 'duration'] = info['duration']
-        df.at[idx, 'max_available_resolution'] = info['max_resolution']
+        df.at[idx, '视频标题'] = info['title']
+        df.at[idx, '视频时长'] = info['duration']
+        df.at[idx, '最大分辨率'] = info['max_resolution']
         if info['error']:
-            df.at[idx, 'error_message'] = format_error_message(info['error'])
-            df.at[idx, 'overall_pass'] = False
+            df.at[idx, '错误信息'] = format_error_message(info['error'])
+            df.at[idx, '是否通过全部筛选'] = False
             continue
-        # 分辨率判定
+        # 分辨率判定 - 检查是否为1080p
         res_ok = (int(info.get('width') or 0) >= min_width and int(info.get('height') or 0) >= min_height)
-        df.at[idx, 'resolution_ok'] = bool(res_ok)
+        df.at[idx, '清晰度是否1080'] = bool(res_ok)
         if not res_ok:
-            df.at[idx, 'overall_pass'] = False
-            df.at[idx, 'notes'] = append_note(df.at[idx, 'notes'], '分辨率不达标')
+            df.at[idx, '是否通过全部筛选'] = False
+            df.at[idx, '备注'] = append_note(df.at[idx, '备注'], '分辨率不达标')
             continue
         # 内容识别（可降级）
         if not detector.enabled:
-            df.at[idx, 'has_violence_blood'] = False
-            df.at[idx, 'has_smoking'] = False
-            df.at[idx, 'overall_pass'] = bool(res_ok)
-            df.at[idx, 'notes'] = append_note(df.at[idx, 'notes'], '内容检测未启用')
+            df.at[idx, '是否有血腥暴力'] = False
+            df.at[idx, '是否有吸烟'] = False
+            df.at[idx, '是否通过全部筛选'] = bool(res_ok)
+            df.at[idx, '备注'] = append_note(df.at[idx, '备注'], '内容检测未启用')
         else:
             detect_res = detector.detect_from_thumbnails(info['thumb_urls'])
             has_violence_blood = bool(detect_res.get('violence', False) or detect_res.get('blood', False) or detect_res.get('gore', False))
             has_smoking = bool(detect_res.get('smoking', False))
-            df.at[idx, 'has_violence_blood'] = has_violence_blood
-            df.at[idx, 'has_smoking'] = has_smoking
-            df.at[idx, 'overall_pass'] = bool(res_ok and (not has_violence_blood) and (not has_smoking))
+            df.at[idx, '是否有血腥暴力'] = has_violence_blood
+            df.at[idx, '是否有吸烟'] = has_smoking
+            df.at[idx, '是否通过全部筛选'] = bool(res_ok and (not has_violence_blood) and (not has_smoking))
 
     # 写回原文件（覆盖Excel）
     with pd.ExcelWriter(excel_path, engine='openpyxl', mode='w') as writer:
@@ -853,7 +847,7 @@ def process_excel_links(excel_path: str, link_column: str = 'link', config_path:
     logger.info(f"处理完成，结果已写回：{excel_path}")
 
 
-def process_batch_files(data_dir: str = 'data', link_column: str = 'link', config_path: str = None):
+def process_batch_files(data_dir: str = 'data', link_column: str = 'vediolink', config_path: str = None):
     """
     批量处理指定文件夹中的所有CSV/Excel文件
     
@@ -900,7 +894,7 @@ def process_batch_files(data_dir: str = 'data', link_column: str = 'link', confi
     logger.info(f"\n批量处理完成，共处理 {len(all_files)} 个文件")
 
 
-def watch_data_folder(data_dir: str = 'data', link_column: str = 'link', config_path: str = None):
+def watch_data_folder(data_dir: str = 'data', link_column: str = 'vediolink', config_path: str = None):
     """
     监控数据文件夹，自动处理新添加的文件
     
@@ -958,7 +952,7 @@ def parse_args():
     parser.add_argument('-c', '--config', help='配置文件路径')
     # Excel模式
     parser.add_argument('--excel', help='Excel文件路径（链接批量模式）')
-    parser.add_argument('--link-column', default='link', help='Excel中链接列名，默认link')
+    parser.add_argument('--link-column', default='vediolink', help='Excel中链接列名，默认vediolink')
     # 新增：批量处理模式
     parser.add_argument('--batch', action='store_true', help='批量处理模式，自动处理data文件夹中的所有CSV/Excel文件')
     parser.add_argument('--data-dir', default='data', help='数据文件夹路径，默认为data')

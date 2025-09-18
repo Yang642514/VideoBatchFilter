@@ -1,7 +1,6 @@
-锘縧ink,title,duration,max_available_resolution,resolution_ok,has_violence_blood,has_smoking,overall_pass,notes,error_message,status,reason,description
-https://www.bilibili.com/video/BV1GJ411x7h7,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
-https://www.bilibili.com/video/BV1Vx411L7xF,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
-https://www.youtube.com/watch?v=dQw4w9WgXcQ,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
-https://www.bilibili.com/video/BV1Us411V7Wc,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
-https://v.douyin.com/quZhP-x96NQ/ ,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
- https://www.bilibili.com/video/BV1Us411V7Wc,,,,,,,,,,error,yt-dlp鏈畨瑁咃紝鏃犳硶澶勭悊鍦ㄧ嚎瑙嗛,
+vediolink,清晰度是否1080,是否有吸烟,是否有血腥暴力,是否通过全部筛选,视频标题,视频时长,最大分辨率,备注,错误信息
+https://www.bilibili.com/video/BV1GJ411x7h7,TRUE,FALSE,FALSE,TRUE,【官方 MV】Never Gonna Give You Up - Rick Astley,,1920x1080,内容检测未启用,yt-dlp 未安装，无法提取视频信息
+https://www.bilibili.com/video/BV1Vx411L7xF,TRUE,FALSE,FALSE,TRUE,【逐月之月】四哥四嫂细节糖52  Love On Top ?? Beauty And The Beast,,1920x1080,内容检测未启用,yt-dlp 未安装，无法提取视频信息
+https://www.bilibili.com/video/BV1Us411V7Wc,TRUE,FALSE,FALSE,TRUE,【纪录片】彩色二战纪录 13集全【国语】,,1920x1080,内容检测未启用,yt-dlp 未安装，无法提取视频信息
+https://v.douyin.com/quZhP-x96NQ/ ,FALSE,,,FALSE,,,1280x720,分辨率不达标,yt-dlp 未安装，无法提取视频信息
+ https://www.bilibili.com/video/BV1Us411V7Wc,TRUE,FALSE,FALSE,TRUE,【纪录片】彩色二战纪录 13集全【国语】,,1920x1080,内容检测未启用,yt-dlp 未安装，无法提取视频信息

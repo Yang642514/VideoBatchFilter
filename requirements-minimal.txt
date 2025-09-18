@@ -1,14 +1,8 @@
-# Minimal dependencies for video batch filter
-# Usage: pip install -r requirements-minimal.txt
+# 最小化依赖 - 基本功能
+pandas>=0.23.0              # Excel/CSV文件处理 (当前已安装0.23.4)
+openpyxl>=2.5.0             # Excel文件读写支持 (当前已安装2.5.6)
+tqdm>=4.26.0                # 进度条显示 (当前已安装4.26.0)
+requests>=2.20.0            # HTTP请求，用于网络操作
 
-# Core dependencies (required)
-yt-dlp>=2023.11.16
-tqdm>=4.50.0
-requests>=2.25.0
-
-# Data processing (recommended for CSV/Excel processing)
-pandas>=1.1.0
-openpyxl>=3.0.0
-
-# Network and retry support
-urllib3>=1.26.0
+# 注意：yt-dlp需要编译器支持，如果安装失败可以跳过
+# 在没有yt-dlp的情况下，系统仍可以处理已有的视频信息

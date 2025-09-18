@@ -17,18 +17,41 @@
 
 ## 安装
 
-1. 克隆仓库：
+### 方法一：使用conda虚拟环境（推荐）
 
+1. 克隆仓库：
 ```bash
-git clone https://github.com/yourusername/VideoBatchFilter.git
+git clone https://github.com/Yang642514/VideoBatchFilter.git
 cd VideoBatchFilter
 ```
 
-2. 安装依赖：
-
+2. 创建并激活虚拟环境：
 ```bash
+# 创建虚拟环境
+conda create -n VideoBatchFilter python=3.9 -y
+
+# 激活环境（Windows）
+activate VideoBatchFilter
+# 或使用脚本
+scripts\activate_env.bat
+```
+
+3. 安装依赖：
+```bash
+# 安装最小依赖（推荐）
+pip install -r requirements-minimal.txt
+
+# 或安装完整依赖
 pip install -r requirements.txt
 ```
+
+### 方法二：直接安装
+
+```bash
+pip install -r requirements-minimal.txt
+```
+
+> 💡 **提示**: 推荐使用虚拟环境以避免依赖冲突。项目已配置专用的conda环境。
 
 ## 使用说明
 
@@ -54,12 +77,22 @@ pip install -r requirements.txt
 VideoBatchFilter/
 ├── data/                    # 数据文件夹（放置待处理文件）
 │   ├── example_links.csv    # 示例文件
-│   └── your_files.xlsx      # 您的文件
-├── 批量处理视频.bat          # 一键批量处理（Windows）
-├── 监控模式.bat             # 监控模式（Windows）
+│   └── vedio_links_cleaned.csv # 处理结果文件
+├── docs/                    # 文档文件夹
+│   ├── DEPENDENCY_STATUS_UPDATED.md # 依赖状态报告
+│   └── INSTALLATION_GUIDE.md        # 安装指南
+├── scripts/                 # 脚本文件夹
+│   ├── activate_env.bat     # 环境激活脚本
+│   ├── 批量处理视频.bat      # 一键批量处理（Windows）
+│   └── 监控模式.bat         # 监控模式（Windows）
+├── utils/                   # 工具模块文件夹
+│   ├── __init__.py          # 包初始化文件
+│   └── video_info_extractor.py # 轻量级视频信息提取器
 ├── batch_process.py         # 批量处理脚本
 ├── video_filter.py          # 主程序
-└── config.json             # 配置文件
+├── config.json             # 配置文件
+├── requirements.txt         # 完整依赖列表
+└── requirements-minimal.txt # 最小依赖列表
 ```
 
 ### 🔧 使用模式

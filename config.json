@@ -1,6 +1,6 @@
 {
   "excel": {
-    "linkColumnName": "link"
+    "linkColumnName": "vediolink"
   },
   "filters": {
     "minResolution": [1920, 1080],
