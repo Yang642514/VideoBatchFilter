@@ -1,0 +1,22 @@
+# 核心依赖 (必需)
+yt-dlp>=2024.3.10          # 视频信息提取核心库
+tqdm>=4.50.0               # 进度条显示
+
+# 数据处理依赖 (推荐)
+pandas>=2.0.0              # Excel/CSV文件处理
+openpyxl>=3.1.0            # Excel文件读写支持
+
+# 网络请求依赖 (推荐)
+requests>=2.28.0           # HTTP请求，用于缩略图下载
+
+# 图像处理依赖 (可选)
+opencv-python>=4.5.0       # 本地视频处理，可选
+Pillow>=9.5.0              # 图像处理，可选
+numpy>=1.19.0              # 数值计算，配合OpenCV使用
+
+# AI内容识别依赖 (可选，需要GPU支持)
+torch>=2.1.0; platform_system!="Darwin"  # PyTorch，Windows/Linux
+transformers>=4.37.0       # Hugging Face模型库
+
+# 系统兼容性
+pathlib>=1.0.1             # 路径处理，Python 3.4+内置但确保兼容性

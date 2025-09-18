@@ -1,0 +1,43 @@
+{
+  "excel": {
+    "linkColumnName": "link"
+  },
+  "filters": {
+    "minResolution": [1920, 1080],
+    "min_duration": 10,
+    "max_duration": 3600,
+    "min_size": 5,
+    "max_size": 2000
+  },
+  "video_extensions": [".mp4", ".avi", ".mkv", ".mov", ".flv", ".wmv"],
+  "detector": {
+    "clipModelId": "openai/clip-vit-base-patch32",
+    "enabledLabels": ["blood", "gore", "violence", "smoking"],
+    "clipThresholds": {
+      "blood": 0.28,
+      "gore": 0.30,
+      "violence": 0.30,
+      "smoking": 0.32
+    },
+    "thumbnailSamples": 5
+  },
+  "downloader": {
+    "useDownloadSections": true,
+    "sectionStrategy": "uniform",
+    "maxConcurrentDownloads": 3
+  },
+  "concurrency": {
+    "maxInfoWorkers": 10,
+    "maxDetectWorkers": 3
+  },
+  "device": {
+    "prefer": "cuda"
+  },
+  "auth": {
+    "cookiesPath": "cookies.txt"
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "video_filter.log"
+  }
+}
