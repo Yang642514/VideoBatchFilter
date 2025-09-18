@@ -57,17 +57,23 @@ def main():
     
     # 导入并运行主程序
     try:
-        from video_filter import process_batch_files
-        process_batch_files(data_dir='data')
+        import sys
+        import subprocess
         
-        print("\n" + "=" * 60)
-        print("✅ 批量处理完成！")
-        print("📄 处理结果已写回原文件")
-        print("=" * 60)
+        # 使用subprocess调用video_filter.py的批量处理模式
+        result = subprocess.run([
+            sys.executable, 'video_filter.py', '--batch'
+        ], capture_output=True, text=True, encoding='gbk', errors='ignore')
         
-    except ImportError as e:
-        print(f"❌ 导入错误：{e}")
-        print("请确保video_filter.py文件在同一目录下")
+        if result.returncode == 0:
+            print("\n" + "=" * 60)
+            print("✅ 批量处理完成！")
+            print("📄 处理结果已写回原文件")
+            print("=" * 60)
+        else:
+            print(f"❌ 处理过程中出现错误：")
+            print(result.stderr)
+        
     except Exception as e:
         print(f"❌ 处理过程中出现错误：{e}")
         print("请检查文件格式和内容是否正确")
