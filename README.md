@@ -20,7 +20,7 @@
 1. 克隆仓库：
 
 ```bash
-git clone https://github.com/yourusername/VideoBatchFilter.git
+git clone https://github.com/Yang642514/VideoBatchFilter.git
 cd VideoBatchFilter
 ```
 
