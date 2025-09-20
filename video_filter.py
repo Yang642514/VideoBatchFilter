@@ -632,7 +632,7 @@ class DataFileProcessor:
 
         try:
             # 读取Excel
-            df = pd.read_excel(excel_path)
+            df = pd.read_excel(excel_path, dtype=str)
             if link_column not in df.columns:
                 logger.error(f"Excel中未找到链接列: {link_column}")
                 return False

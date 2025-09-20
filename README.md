@@ -226,18 +226,18 @@ A:
 
 ### v1.1.0 (2025-01-18)
 **重要修复：**
-- 🐛 修复了pandas读取CSV时数据类型推断导致的float转换错误
+- 🐛 修复了pandas读取Excel时因数据类型推断导致的float转换错误
 - 🔧 修复了配置文件中时长筛选参数的读取逻辑
-- ✅ 解决了批量处理模式下"could not convert string to float"错误
-- 📊 改进了CSV文件的数据类型处理，所有列现在都以字符串形式读取
+- ✅ 解决了处理Excel文件时"could not convert string to float"的错误
+- 📊 改进了Excel文件的数据类型处理，所有列现在都以字符串形式读取
 
 **技术改进：**
-- 在pandas读取CSV时添加了`dtype=str`参数，避免自动类型推断
+- 在pandas读取Excel时添加了`dtype=str`参数，避免自动类型推断
 - 修正了配置文件中`filters.min_duration`和`filters.max_duration`的读取路径
 - 增强了错误处理和调试信息输出
 
 **影响：**
-- 批量处理功能现在可以正常处理包含空值的CSV文件
+- 批量处理功能现在可以正常处理包含空值或混合数据类型的Excel文件
 - 提高了程序的稳定性和容错能力
 - 改善了用户体验，减少了运行时错误
 
