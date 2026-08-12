@@ -155,6 +155,11 @@ Thumbs.db
 logs/
 temp/
 debug_check_video.py
+cookies.txt
+data/*.csv
+data/*.xlsx
+data/*.xls
+!data/example_links.csv
 
 # Trae AI specific
 .trae/

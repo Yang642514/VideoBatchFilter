@@ -133,8 +133,8 @@ class LightVideoExtractor:
             return {
                 'title': title,
                 'duration': duration,
-                'resolution': '1080p',  # B站默认支持1080p
-                'error': ''
+                'resolution': '',
+                'error': '轻量级提取器无法可靠获取B站分辨率，请安装yt-dlp'
             }
             
         except Exception as e:
@@ -158,9 +158,9 @@ class LightVideoExtractor:
             
             return {
                 'title': title,
-                'duration': '',  # 抖音通常是短视频
-                'resolution': '720p',  # 抖音默认分辨率
-                'error': ''
+                'duration': '',
+                'resolution': '',
+                'error': '轻量级提取器无法可靠获取抖音视频规格，请安装yt-dlp'
             }
             
         except Exception as e:
@@ -204,8 +204,7 @@ def test_extractor():
     
     # 测试链接
     test_urls = [
-        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',  # YouTube测试
-        'https://www.bilibili.com/video/BV1xx411c7mu',  # B站测试
+        'https://example.com/media/video-001.mp4',
     ]
     
     for url in test_urls:

@@ -1,164 +1,118 @@
-# 视频批量筛选工具
+# VideoBatchFilter
 
-> **一句话说清：** 把成百上千个视频链接扔进去，自动过滤掉画质差、时长不合规、大小不达标的视频，结果直接写回原文件。
+批量检查视频素材规格与内容标签的 Python 工具。支持读取 CSV/Excel 中的在线视频链接，也支持扫描本地视频目录。
 
----
+适合在素材入库、剪辑准备、内容审核和媒体资产整理前，先完成一轮可重复的规格检查。
 
-## 🔍 解决什么问题
+## 两种工作模式
 
-在视频搬运、分发、聚合等场景中，你手里往往有一大堆视频链接，需要人工逐一检查每个视频的：
-- 画质是否达到要求（比如至少 720p）？
-- 时长是否在范围内（比如 10 秒 ~ 1 小时）？
-- 文件大小是否合理？
+### 在线链接模式
 
-**VideoBatchFilter** 把这件事自动化了——只要你有一条视频链接，工具就能自动获取视频信息并按规则筛选。
+从 CSV 或 Excel 读取链接，使用 `yt-dlp` 获取可用的视频元信息，并把结果写回原文件。
 
----
+可检查：
 
-## 📋 输入 / 输出示例
+- 最大分辨率
+- 视频时长
+- 标题和提取错误
+- 可选 CLIP 内容标签：暴力、血腥、吸烟
 
-**处理前（你的 CSV 文件）：**
+### 本地文件模式
 
-| link | title | notes |
-|------|-------|-------|
-| https://example.com/v1.mp4 | 视频1 | 来自A站 |
-| https://example.com/v2.mp4 | 视频2 | 来自B站 |
-| https://example.com/v3.mp4 | 视频3 | 来自C站 |
+扫描本地视频目录，使用 OpenCV 检查：
 
-**处理后（同一文件多了几列）：**
+- 分辨率
+- 视频时长
+- 文件大小
 
-| link | title | notes | status | reason | duration | resolution |
-|------|-------|-------|--------|--------|----------|------------|
-| https://example.com/v1.mp4 | 视频1 | 来自A站 | ✅ pass | — | 120s | 1920×1080 |
-| https://example.com/v2.mp4 | 视频2 | 来自B站 | ❌ reject | 时长不足(5s<10s) | 5s | 1280×720 |
-| https://example.com/v3.mp4 | 视频3 | 来自C站 | ✅ pass | — | 300s | 1920×1080 |
+可以把符合条件的文件复制到单独的输出目录。
 
----
+## 快速开始
 
-## ✨ 功能特点
-
-- 📺 支持多平台在线视频（YouTube、B站、抖音等，依赖 yt-dlp）
-- 📁 支持本地视频文件（mp4 / avi / mkv / mov / flv / wmv）
-- 📏 按分辨率筛选（宽高均可自定义）
-- ⏱️ 按时长筛选（最小 / 最大时长）
-- 📦 按文件大小筛选
-- 📊 支持批量处理 CSV / Excel 文件
-- 👁️ 支持监控模式（新文件自动处理）
-- 🛡️ 智能重试 + 详细日志
-
----
-
-## 🚀 快速开始
-
-### 1. 安装依赖
+建议使用 Python 3.10 或更高版本。
 
 ```bash
 git clone https://github.com/Yang642514/VideoBatchFilter.git
 cd VideoBatchFilter
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements-minimal.txt
 ```
 
-### 2. 准备文件
-
-将包含视频链接的 CSV 或 Excel 文件放入 `data/` 文件夹，文件需包含 `link` 列。
-
-### 3. 运行
-
-**方式一：双击（Windows）**
-```
-双击运行 scripts\批量处理视频.bat
-```
-
-**方式二：命令行**
-```bash
-python batch_process.py
-```
-
-### 4. 查看结果
-
-处理完成后，打开原文件，最后几列就是筛选结果。
-
----
-
-## 📁 项目结构
-
-```
-VideoBatchFilter/
-├── batch_process.py          # 一键批量处理入口
-├── video_filter.py            # 核心筛选逻辑
-├── config.json               # 筛选规则配置
-├── data/                     # 放待处理文件
-├── scripts/
-│   ├── 批量处理视频.bat        # Windows 一键处理
-│   └── 监控模式.bat           # Windows 监控文件夹
-└── utils/
-    └── video_info_extractor.py  # 视频信息提取器
-```
-
----
-
-## ⚙️ 筛选规则配置
-
-编辑 `config.json` 即可自定义筛选条件：
-
-```json
-{
-    "filters": {
-        "min_resolution": [1280, 720],   // 最小分辨率
-        "min_duration": 10,               // 最短时长（秒）
-        "max_duration": 3600,             // 最长时长（秒）
-        "min_size": 5,                   // 最小文件大小（MB）
-        "max_size": 2000                  // 最大文件大小（MB）
-    }
-}
-```
-
----
-
-## 📖 进阶用法
+把 CSV/Excel 文件放入 `data/`。默认链接列名是历史字段 `vediolink`，可以通过 `--link-column` 指定其他列名。
 
 ```bash
-# 批量处理 data 文件夹下所有文件
+# 批量处理 data/ 中的 CSV 和 Excel
 python video_filter.py --batch
 
-# 单文件处理
-python video_filter.py --excel my_links.csv
+# 处理单个文件
+python video_filter.py --excel my_links.csv --link-column video_url
 
-# 监控模式（自动处理新文件）
+# 持续监控当前进程启动后新增到 data/ 的文件
 python video_filter.py --watch
-
-# 本地视频文件筛选
-python video_filter.py -i ./input -o ./output
 ```
 
----
+Windows 用户也可以运行 `scripts/批量处理视频.bat`。
 
-## ❓ 常见问题
+## 输入与输出
 
-**Q: 链接列名不是 `link` 怎么办？**
-在 `config.json` 中添加：`"link_column": "你的列名"`
+输入示例见 `data/example_links.csv`：
 
-**Q: 想保留某些链接不受筛选影响？**
-在 CSV 中加一列 `force_pass`，值设为 `true`，该链接会跳过筛选直接通过。
+```csv
+vediolink,video_title
+https://example.com/media/video-001.mp4,示例素材 1
+https://example.com/media/video-002.mp4,示例素材 2
+```
 
-**Q: 程序中途失败了怎么办？**
-工具支持断点续传，已处理的链接不会重复抓取，重新运行即可。
+处理后会在原 CSV/Excel 中补充标题、时长、最大分辨率、规格结果、可选内容标签、备注和错误信息等列。
 
----
+链接模式会覆盖写回原文件。正式处理前请保留原始数据副本。项目使用临时文件完成 CSV 替换，但这不等于完整的数据备份或跨重启断点续传。
 
-## 📦 依赖
+## 本地视频目录
 
-| 依赖 | 用途 |
-|------|------|
-| yt-dlp | 获取在线视频信息 |
-| pandas | CSV/Excel 数据处理 |
-| requests | 网络请求 |
-| tqdm | 进度条 |
+本地模式需要安装完整依赖中的 OpenCV：
 
-完整依赖见 `requirements.txt`，最小依赖见 `requirements-minimal.txt`。
+```bash
+pip install -r requirements.txt
+python video_filter.py --input ./input --output ./passed
+```
 
----
+不提供 `--output` 时只输出符合条件的文件列表，不复制文件。
 
-## 许可证
+## 配置
 
-MIT
+筛选条件和输出列名位于 `config.json`。默认最低分辨率为 `1920x1080`，时长范围为 10–3600 秒。
+
+`min_size` 和 `max_size` 仅用于本地文件模式。链接模式不会下载完整视频来计算文件大小。
+
+## 可选内容标签
+
+安装 `torch`、`transformers`、`Pillow` 后，链接模式会尝试从缩略图判断暴力、血腥和吸烟标签。阈值位于 `config.json`。
+
+这些结果来自模型相似度，不是人工审核结论，也不适合单独用于高风险合规决策。没有相关依赖时，内容标签检测会自动跳过。
+
+## Cookie 与平台限制
+
+部分平台或受限视频可能需要 Cookie。默认路径是本地 `cookies.txt`，该文件已加入 `.gitignore`。
+
+Cookie 属于账号凭据，不要提交到 Git，也不要分享给他人。平台页面和反爬策略会变化，仓库不能保证所有平台、地区和时间都能稳定提取。
+
+## 监控模式边界
+
+`--watch` 只记录当前进程启动后已经处理过的文件。程序重启后不会恢复处理进度，因此它不是持久化断点续传。
+
+## 目录结构
+
+```text
+video_filter.py             主 CLI 与处理流程
+batch_process.py            Windows 友好的批处理入口
+config.json                 输出列和筛选规则
+data/example_links.csv      不含真实平台数据的输入格式示例
+utils/                      数据处理与轻量提取器
+scripts/                    Windows 批处理脚本
+docs/                       安装与结构说明
+```
+
+## 许可证状态
+
+仓库当前没有独立的开源许可证文件，因此未正式授予复制、修改或再分发许可。待作者选择许可证后再补充。
