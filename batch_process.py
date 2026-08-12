@@ -10,7 +10,7 @@
 3. 等待处理完成
 
 注意：
-- 确保文件中包含'link'列（或在config.json中指定其他列名）
+- 默认确保文件中包含 `vediolink` 列；也可以直接运行 video_filter.py 并用 --link-column 指定其他列名
 - 处理结果会直接写回原文件
 """
 
@@ -44,7 +44,7 @@ def main():
         print("❌ data文件夹中没有找到CSV或Excel文件")
         print("\n请将待处理的文件放入data文件夹：")
         print("  - 支持的格式：.csv, .xlsx, .xls")
-        print("  - 确保文件中包含'link'列")
+        print("  - 默认确保文件中包含'vediolink'列")
         input("按回车键退出...")
         return
     
